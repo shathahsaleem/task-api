@@ -8,8 +8,8 @@ app = FastAPI()
 tasks_db=[
     {
         'id': 1, 
-    'title': 'Setup development environment', 
-    'done': True
+        'title': 'Setup development environment', 
+        'done': True
     },
     {
         'id': 2, 
@@ -29,6 +29,7 @@ class TaskCreate(BaseModel):
 # Stage 1 endpoints
 @app.get('/')
 def root():
+    """Returns basic API metadata and the available endpoints. """
     return {
         'name': 'Task API', 
         'version' : '1.0' , 
@@ -37,15 +38,18 @@ def root():
 
 @app.get('/health')
 def healthcheck():
+    """Checks API health status."""
     return {'status' : 'ok'}
 
 # Stage 2 endpoints
 @app.get('/tasks')
 def get_tasks():
+    """Returns all tasks from the database."""
     return tasks_db
 
 @app.get('/tasks/{task_id}')
 def get_task(task_id:int):
+    """Retrieves a single task by its unique ID."""
     for task in tasks_db:
         if task['id'] == task_id:
             return task
@@ -54,6 +58,7 @@ def get_task(task_id:int):
 # Stage 3 endpoints
 @app.post('/tasks', status_code=201)
 def create_task(task: TaskCreate):
+    """Creates a new task with a title."""
     if not task.title or not task.title.strip():
         return JSONResponse(status_code=400, content={'error': 'Task title cannot be empty'})
 
@@ -75,6 +80,7 @@ class TaskUpdate(BaseModel):
 # Stage 4 endpoints
 @app.put('/tasks/{task_id}')
 def update_task(task_id:int, task: TaskUpdate):
+    """Updates a task's title and/or completion status."""
     target_task= None
 
     for t in tasks_db:
@@ -100,6 +106,7 @@ def update_task(task_id:int, task: TaskUpdate):
 
 @app.delete('/tasks/{task_id}', status_code=204)
 def delete_task(task_id:int):
+    """Deletes a task by its unique ID."""
     for i, task in enumerate(tasks_db):
         if task['id'] == task_id:
             del tasks_db[i]
