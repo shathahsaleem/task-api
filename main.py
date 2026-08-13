@@ -37,39 +37,54 @@ def init_db():
 init_db()
 
 # PYDANTIC MODELS
+class TaskCreate(BaseModel):
+    title: str
 
-# class TaskCreate(BaseModel):
-#     title: str
+@app.get('/')
+def root():
+    """Returns basic API metadata and the available endpoints. """
+    return {
+        'name': 'Task API', 
+        'version' : '1.0' , 
+        'endpoints' : ['/tasks'] 
+        }
+
+@app.get('/health')
+def healthcheck():
+    """Checks API health status."""
+    return {'status' : 'ok'}
 
 # # Stage 1 endpoints
-# @app.get('/')
-# def root():
-#     """Returns basic API metadata and the available endpoints. """
-#     return {
-#         'name': 'Task API', 
-#         'version' : '1.0' , 
-#         'endpoints' : ['/tasks'] 
-#         }
+@app.get('/tasks')
+def get_tasks():
+    """Returns all tasks from the SQLite database."""
+    cursor= conn.cursor()
+    cursor.execute('SELECT * FROM tasks')
+    tasks = cursor.fetchall()
+   
+    tasks_list = []
+    for task in tasks:
+       tasks_list.append(
+        {
+           'id': task['id'],
+           'title': task['title'],
+           'done': bool(task['done'])
+       })
+    return tasks_list
 
-# @app.get('/health')
-# def healthcheck():
-#     """Checks API health status."""
-#     return {'status' : 'ok'}
-
-# # Stage 2 endpoints
-# @app.get('/tasks')
-# def get_tasks():
-#     """Returns all tasks from the database."""
-#     return tasks_db
-
-# @app.get('/tasks/{task_id}')
-# def get_task(task_id:int):
-#     """Retrieves a single task by its unique ID."""
-#     for task in tasks_db:
-#         if task['id'] == task_id:
-#             return task
-#     return JSONResponse(status_code=404, content={'error': f'Task {task_id} not found'})
-
+@app.get('/tasks/{task_id}')
+def get_task(task_id:int):
+    """Retrieves a single task by its unique ID from the SQLite database."""
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = cursor.fetchone()
+    if not task:
+        return JSONResponse(status_code=404, content={'error': f'Task {task_id} not found'})
+    return {
+        'id': task['id'],
+        'title': task['title'],
+        'done': bool(task['done'])
+    }
 # # Stage 3 endpoints
 # @app.post('/tasks', status_code=201)
 # def create_task(task: TaskCreate):
