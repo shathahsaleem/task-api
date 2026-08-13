@@ -39,6 +39,7 @@ init_db()
 # PYDANTIC MODELS
 class TaskCreate(BaseModel):
     title: str
+    done: Optional[bool] = False
 
 @app.get('/')
 def root():
@@ -85,23 +86,25 @@ def get_task(task_id:int):
         'title': task['title'],
         'done': bool(task['done'])
     }
-# # Stage 3 endpoints
-# @app.post('/tasks', status_code=201)
-# def create_task(task: TaskCreate):
-#     """Creates a new task with a title."""
-#     if not task.title or not task.title.strip():
-#         return JSONResponse(status_code=400, content={'error': 'Task title cannot be empty'})
 
-#     new_id = max(t['id'] for t in tasks_db) + 1 if tasks_db else 1
-        
-#     new_task = {
-#             'id': new_id,
-#             'title': task.title.strip(),
-#             'done': False
-#             }
+# # Stage 2 endpoints
+@app.post('/tasks', status_code=201)
+def create_task(task: TaskCreate):
+    """Creates a new task with a title in the SQLite database."""
+    if not task.title or not task.title.strip():
+        return JSONResponse(status_code=400, content={'error': 'Task title cannot be empty'})
 
-#     tasks_db.append(new_task)
-#     return new_task
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO tasks (title, done) VALUES (?, ?)', (task.title.strip(), task.done))
+    conn.commit()
+
+    new_task_id = cursor.lastrowid
+
+    return {
+        'id': new_task_id,
+        'title': task.title.strip(),
+        'done': task.done
+    }
 
 # class TaskUpdate(BaseModel):
 #     title: Optional[str] = None
