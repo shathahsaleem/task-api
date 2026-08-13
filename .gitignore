@@ -1,0 +1,11 @@
+# Virtual Environment
+venv/
+env/
+
+# Database
+tasks.db
+tasks.db-journal
+
+# Python Cache
+__pycache__/
+*.pyc
