@@ -18,15 +18,14 @@ The primary goals of this project are to:
 
 ## Database Architecture & Storage
 
-### Why SQLite?
-* **Single-file Storage:** All database data resides inside a single, lightweight `tasks.db` file without requiring a separate external database server installation.
-* **Zero Configuration:** No complex configuration, authentication, or setup required—Python’s built-in `sqlite3` driver works out of the box.
-* **Persistence Across Restarts:** Unlike in-memory data structures, data saved in SQLite survives application and server restarts.
+### Why PostgreSQL & Docker?
+* **Production-Grade Persistence:** Moves away from local file storage to a fully relational, scalable database system.
+* **Isolated Environment:** PostgreSQL runs inside a dedicated Docker container, ensuring identical database environments across development and production.
+* **Security First:** Database credentials (`DATABASE_URL`) are managed via environment variables and loaded through a `.env` file, keeping secrets completely isolated from source control.
 
-### Database Location & Version Control
-* **File Location:** `tasks.db` lives directly in the project root folder.
-* **Automatic Initialization:** Generated automatically on startup via `init_db()` if it does not already exist.
-* **Git Ignored:** `tasks.db` is tracked in `.gitignore` so that each fresh git clone starts with a clean database baseline without pushing local test state to source control.
+### Version Control & Secrets
+* **Git Ignored File:** `.env` is explicitly included in `.gitignore` to prevent sensitive database passwords and host parameters from leaking into Git history.
+* **Container Volume:** Persistent database storage is handled via Docker volumes (`taskdata`), keeping data intact across container restarts.
 
 ---
 
@@ -51,8 +50,13 @@ source venv/bin/activate
 # Install required dependencies
 pip install fastapi uvicorn pydantic
 ```
-
 ### 2. Activation
+
+1. Start the PostgreSQL container:
+```bash
+docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
+```
+
 Run the server by starting the Uvicorn development server:
 ```bash
 uvicorn main:app --reload

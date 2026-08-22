@@ -2,6 +2,9 @@
 venv/
 env/
 
+# Environment Variables
+.env
+
 # Database
 tasks.db
 tasks.db-journal
